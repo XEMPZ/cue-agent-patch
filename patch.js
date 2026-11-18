@@ -15,6 +15,7 @@ const path = require('path');
 const os = require('os');
 const { execSync } = require('child_process');
 const { injectPatch } = require('./core/injector');
+const { injectMainProcess } = require('./core/main_injector');
 
 console.log('====================================================');
 console.log('       Cue Deep Unveil Hotfix Installer (v1.1.14)   ');
@@ -114,6 +115,19 @@ if (!targetChunk) {
   console.error('[ERROR] Could not find the conversation chunk containing target signatures.');
   console.error('Please refer to docs/MIGRATION_GUIDE_FOR_AI.md for signature adaptation.');
   process.exit(1);
+}
+
+// 4.5. Patch Main Process (dist/main.cjs)
+const mainCjsPath = path.join(tmpDir, 'dist', 'main.cjs');
+if (fs.existsSync(mainCjsPath)) {
+  console.log('[Inject] Applying main process Computer Use & MCP merger hotfix...');
+  try {
+    const patchedMain = injectMainProcess(mainCjsPath);
+    fs.writeFileSync(mainCjsPath, patchedMain, 'utf8');
+    console.log('[Inject] dist/main.cjs successfully patched and verified!');
+  } catch (err) {
+    console.error('[WARN] Failed to patch dist/main.cjs:', err.message);
+  }
 }
 
 // 5. Inject patch
