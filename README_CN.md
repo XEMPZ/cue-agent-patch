@@ -1,21 +1,35 @@
-# Cue 深度解密与执行步骤常驻补丁 (Cue Deep Unveil Patch)
+# Cue 全能本地 Agent 增强与深度透出补丁 (Cue Deep Unveil & Agent Patch)
 
 [![Target Version](https://img.shields.io/badge/Cue%20Version-1.1.14-blue.svg)](https://github.com/XEMPZ/cue-agent-patch)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-brightgreen.svg)](https://github.com/XEMPZ/cue-agent-patch)
 [![License](https://img.shields.io/badge/License-MIT-orange.svg)](LICENSE)
 
-> **为官方 Cue 桌面端（v1.1.14）打造的非侵入式热补丁**  
-> 彻底解决执行步骤“一闪而过”、历史对话轮次工具调用“凭空消失”、隐藏操作参数无法查看的痛点，将后台真实执行的每一个终端命令、文件读写路径、学术检索与 MCP 调用永久固化在对话界面中。
+> **为官方 Cue 桌面端（v1.1.14）打造的全功能非侵入式热补丁**  
+> 彻底解决执行步骤“一闪而过”、历史对话轮次工具调用“凭空消失”、隐藏操作参数无法查看的痛点；  
+> 同时**移植 ManusStudio 核心资产，唤醒 Windows 原生桌面控制 (Computer Use)、打通本地免提权 Python 工具链与用户自定义 MCP 扩展生态**，将 Cue 真正重塑为安全、透明、全能的本地 Agent 平台。
 
 ---
 
 ## 🌟 补丁核心特性
 
+### 1. 深度透出与安全审计 (Execution Observability & Security)
 1. **历史轮次步骤全量永驻**：彻底重构轮次容器生命周期，无论进行多少轮新对话、无论是否点击“记忆已更新”，历史各轮的工具调用记录永久保留在各自气泡下方，杜绝组件卸载清空。
-2. **详细操作参数代码化透出**：不再只显示空洞的一句话，每个步骤均以代码块形式直接展示真实的终端执行命令（`terminal.command`）、读写文件绝对路径（`textEditor.path`）、检索关键词（`searchScholar.queries`）及 MCP 调用参数。
-3. **套话心跳自动过滤**：智能拦截并丢弃诸如“Cue 正在处理您的请求”、“准备好接收新请求或修改”等系统占位心跳，精准捕获真正具备业务意义的思考进度。
-4. **原生 UI 视觉契合**：完美适配官方明暗主题、Tailwind 设计系统与平滑滚动，带独立滚动条与收起/展开折叠卡片。
-5. **双向安全一键维护**：自带备份与还原机制，每次修补前自动生成 `.bak`，支持随时无损回滚。
+2. **高危命令实时分析与醒目警示**：前端动态识别如 `rmdir /s`、`del /f /s /q`、`format` 等破坏性命令，渲染带脉冲动效的 `⚠️ 高危指令` 红色警示徽章。
+3. **详细操作参数代码化透出**：不再只显示空洞的一句话，每个步骤均以代码块形式直接展示真实的终端执行命令（`terminal.command`）、读写文件绝对路径（`textEditor.path`）、检索关键词（`searchScholar.queries`）及 MCP 调用参数，支持一键点击复制。
+4. **敏感凭据自动脱敏**：前端实时过滤并遮蔽 GitHub Token (`gho_***`)、OpenAI/Anthropic API Key (`sk-***`) 及 Bearer Authorization，防止会话截图外泄。
+5. **一键导出 Markdown 审计报告**：每一轮次右上角新增“📥 导出日志”按钮，随时导出标准 Markdown 格式的完整步骤审计文件。
+6. **五态状态机联动**：细分成功（✓）、进行中（●）、失败（✕）、已取消（⊘）、进度流（ℹ），操作状态一目了然。
+
+### 2. 本地 Agent 全能改造 (Full Local Agent Capabilities)
+1. **唤醒 Windows 原生桌面控制 (Computer Use)**：
+   - 移植同源母体 `ManusStudio` 的 Windows 原生键鼠、截屏与 QuickJS 沙箱执行组件（`helper/win32-x64/ManusComputerUseHelper.exe` 与 `runtime/computer-use-js.mjs`）。
+   - 解除主进程中硬编码的平台限制，使 Windows 客户端同样享有原生桌面 GUI 操控能力。
+2. **免提权用户工具链隔离 (Zero-Elevation User Toolchain)**：
+   - 在用户主目录自动挂载专属隔离 Python 环境（`%USERPROFILE%\.cue\toolchain\venv`）。
+   - 主进程在派生底层执行器时，自动将虚拟环境与用户工具目录（`Scripts`、`.local\bin`、`.cargo\bin`）优先注入 `env.PATH` 并设置 `VIRTUAL_ENV`。
+   - 彻底解决普通用户权限下无法通过管理员安装系统依赖、无法调用 Python 脚本的壁垒。
+3. **本地自定义 MCP 扩展器 (Custom MCP Host)**：
+   - 在主进程注入热合并机制，自动读取用户级配置文件 `%USERPROFILE%\.cue\mcp_servers.json` 并与系统工具链无缝融合，用户可自由扩充任意标准 stdio/socket 本地 MCP 服务。
 
 ---
 
@@ -135,10 +149,11 @@ cue-agent-patch/
 ├── patch.bat                      # Windows 用户一键修补批处理
 ├── restore.bat                    # Windows 用户一键还原批处理
 ├── core/
-│   ├── injector.js                # AST 语法校验与模块热注入引擎
-│   └── modules/                   # 独立解耦的增强组件源码
-│       ├── common_helpers.js      # 工具函数、缓存与套话过滤器
-│       ├── nz_component.js        # 消息气泡步骤抽屉组件
+│   ├── injector.js                # AST 语法校验与前端模块热注入引擎
+│   ├── main_injector.js           # 主进程注入引擎 (Computer Use 解封/MCP合并/PATH穿透)
+│   └── modules/                   # 独立解耦的前端增强组件源码
+│       ├── common_helpers.js      # 工具函数、缓存、敏感脱敏与高危命令识别
+│       ├── nz_component.js        # 消息气泡步骤抽屉组件 (五态机+高危徽章+日志导出)
 │       ├── o6_component.js        # 实时多步指示器组件
 │       └── turn_history_component.js # 历史轮次永驻看板组件
 └── docs/

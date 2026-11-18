@@ -6,15 +6,20 @@
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-brightgreen.svg)](https://github.com/XEMPZ/cue-agent-patch)
 [![License](https://img.shields.io/badge/License-MIT-orange.svg)](LICENSE)
 
-> A production-grade, non-destructive hotfix for **Cue Desktop (v1.1.14)** that permanently unveils hidden inner agent steps, full terminal execution commands, file operations, web research, and complete historical timelines across all conversation turns.
+> A production-grade, non-destructive hotfix for **Cue Desktop (v1.1.14)** that permanently unveils hidden inner agent steps, full terminal execution commands, file operations, web research, and complete historical timelines across all conversation turns.  
+> Also unlocks **native Windows Computer Use**, provides a **zero-elevation isolated Python toolchain**, and enables **custom local MCP server registration**.
 
 ---
 
 ## ⚡ Highlights
 
 * **Permanent Turn-History Retention**: Prevents React unmounting when new turns start or when "Memory updated" is clicked. Every single tool invocation remains anchored under its respective message bubble forever.
-* **Granular Parameter Exposure**: Terminal commands (`terminal.command`), file paths (`textEditor.path`), search queries, and MCP arguments are parsed and displayed as formatted code blocks.
-* **Smart Boilerplate Filter**: Automatically strips out generic system heartbeats (e.g., *"Cue is processing your request"*, *"Task completed"*), ensuring domain progress thoughts remain crisp and uninterrupted.
+* **Risk Command Detection**: Real-time identification of destructive commands (`rmdir /s`, `del /f /s /q`, `format`, etc.) with animated warning badges (`⚠️ 高危指令`).
+* **Sensitive Token Masking**: Real-time redaction of GitHub Tokens, OpenAI API keys, and Bearer authorizations to prevent credential leaks.
+* **One-Click Audit Log Export**: Easily export full turn execution histories into standard Markdown (`📥 导出日志`).
+* **Native Windows Computer Use Unlocked**: Ported from parent software ManusStudio, enabling local keyboard/mouse control and QuickJS execution on Windows.
+* **Zero-Elevation Python Toolchain**: Isolated Python 3.13 environment automatically injected into `PATH` and `VIRTUAL_ENV`, eliminating admin elevation barriers.
+* **Custom MCP Host Integration**: Automatically merges `%USERPROFILE%\.cue\mcp_servers.json` into runtime configurations.
 * **100% AST Syntax Verified**: Injected code is strictly validated using Node.js Abstract Syntax Tree (`vm.Script`) prior to packing, completely eliminating Webpack `ChunkLoadError` risks.
 * **Zero-Touch Backup & Restore**: Automatic `.bak` snapshot generation before patching, with instant one-click rollback.
 

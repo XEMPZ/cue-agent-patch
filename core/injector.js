@@ -22,12 +22,14 @@ function injectPatch(chunkFilePath) {
   const th = fs.readFileSync(path.join(modulesDir, 'turn_history_component.js'), 'utf8');
 
   console.log('[1/5] Injecting common_helpers and enhanced O6 component...');
+  const bpStart = code.indexOf('function __isBoilerplateText');
   const o6Start = code.indexOf('function O6({');
   const o6End = code.indexOf('O0._id=', o6Start);
   if (o6Start === -1 || o6End === -1) {
     throw new Error('Could not locate O6 component bounds');
   }
-  code = code.slice(0, o6Start) + helpers + '\n' + o6 + '\n' + code.slice(o6End);
+  const helperInsertPos = (bpStart !== -1 && bpStart < o6Start) ? bpStart : o6Start;
+  code = code.slice(0, helperInsertPos) + helpers + '\n' + o6 + '\n' + code.slice(o6End);
 
   console.log('[2/5] Injecting enhanced Nz component (step drawer card)...');
   const nzStart = code.indexOf('function Nz({');
@@ -38,11 +40,13 @@ function injectPatch(chunkFilePath) {
   code = code.slice(0, nzStart) + nz + ' ' + code.slice(nzEnd);
 
   console.log('[3/5] Injecting TurnHistorySteps component...');
+  const thStart = code.indexOf('function TurnHistorySteps({');
   const toStart = code.indexOf('function To(');
   if (toStart === -1) {
     throw new Error('Could not locate To component bounds');
   }
-  code = code.slice(0, toStart) + th + '\n' + code.slice(toStart);
+  const thInsertPos = (thStart !== -1 && thStart < toStart) ? thStart : toStart;
+  code = code.slice(0, thInsertPos) + th + '\n' + code.slice(toStart);
 
   console.log('[4/5] Wiring history branch inside To component...');
   const oldBranch = 'ignoreBoundary:!0})]}):null]},e.id';

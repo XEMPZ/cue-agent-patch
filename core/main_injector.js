@@ -16,7 +16,7 @@ function injectMainProcess(mainCjsPath) {
   const isCRLF = code.includes('\r\n');
   code = code.replace(/\r\n/g, '\n');
 
-  console.log('[Main 1/3] Unlocking environment injection platform check for Windows...');
+  console.log('[Main 1/4] Unlocking environment injection platform check for Windows...');
   const target1 = 'if (process.platform !== "darwin") return env;';
   if (code.includes(target1)) {
     code = code.replace(target1, '/* platform check removed by cue-agent-mod */');
@@ -24,7 +24,41 @@ function injectMainProcess(mainCjsPath) {
     console.log('Notice: Target 1 already patched or not present.');
   }
 
-  console.log('[Main 2/3] Unlocking prepareComputerUse caller for Windows...');
+  console.log('[Main 2/4] Injecting user toolchain PATH & VIRTUAL_ENV into env(options)...');
+  const targetToolchain = 'if (helper) env.MANUS_OPERATOR_COMPUTER_USE_HELPER = helper;\n    return env;';
+  const replToolchain = `if (helper) env.MANUS_OPERATOR_COMPUTER_USE_HELPER = helper;
+    try {
+      const uHome = (0, import_node_os6.homedir)();
+      const toolchainDirs = [
+        (0, import_node_path22.join)(uHome, ".cue", "toolchain", "venv", "Scripts"),
+        (0, import_node_path22.join)(uHome, ".cue", "toolchain", "bin"),
+        (0, import_node_path22.join)(uHome, ".local", "bin"),
+        (0, import_node_path22.join)(uHome, ".cargo", "bin")
+      ].filter(p => (0, import_node_fs12.existsSync)(p));
+      if (toolchainDirs.length > 0) {
+        const curPath = env.PATH || process.env.PATH || "";
+        const sep = process.platform === "win32" ? ";" : ":";
+        env.PATH = toolchainDirs.join(sep) + sep + curPath;
+        const venvDir = (0, import_node_path22.join)(uHome, ".cue", "toolchain", "venv");
+        if ((0, import_node_fs12.existsSync)(venvDir)) {
+          env.VIRTUAL_ENV = venvDir;
+        }
+        console.log("[LocalDevice] Enhanced PATH with user toolchains:", toolchainDirs);
+      }
+    } catch (e) {
+      console.warn("[LocalDevice] Failed to inject user toolchains into PATH:", e);
+    }
+    return env;`;
+
+  if (code.includes(targetToolchain)) {
+    code = code.replace(targetToolchain, replToolchain);
+  } else if (code.includes('Enhanced PATH with user toolchains')) {
+    console.log('Notice: Toolchain injection already applied.');
+  } else {
+    console.log('Notice: Toolchain injection anchor not matched.');
+  }
+
+  console.log('[Main 3/4] Unlocking prepareComputerUse caller for Windows...');
   const target2 = `this.issuedToken = token;
       this.issuedDeviceId = this.options.deviceId;
       if (process.platform === "darwin") {
@@ -44,7 +78,7 @@ function injectMainProcess(mainCjsPath) {
     console.log('Notice: Target 2 caller already unlocked or using alternate anchor.');
   }
 
-  console.log('[Main 3/3] Enhancing prepareComputerUse with Custom MCP Server Merger...');
+  console.log('[Main 4/4] Enhancing prepareComputerUse with Custom MCP Server Merger...');
   const start3 = code.indexOf('async prepareComputerUse(configDirectory) {');
   const end3 = code.indexOf('(0, import_node_fs12.renameSync)(temporary, manifest);\n  }', start3);
 
