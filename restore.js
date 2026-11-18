@@ -59,6 +59,23 @@ if (!fs.existsSync(backupPath)) {
 try {
   console.log(`[Restore] Restoring ${backupPath} -> ${asarPath}...`);
   fs.copyFileSync(backupPath, asarPath);
+
+  const operatorExe = path.join(path.dirname(asarPath), 'bin', 'manus-computer-operator.exe');
+  if (fs.existsSync(operatorExe)) {
+    try {
+      const fd = fs.openSync(operatorExe, 'r+');
+      const buf = Buffer.alloc(6);
+      fs.readSync(fd, buf, 0, 6, 0x7cc902);
+      if (buf.toString('hex') === '909090909090') {
+        fs.writeSync(fd, Buffer.from('0f840f030000', 'hex'), 0, 6, 0x7cc902);
+        console.log('[Restore] Reverted manus-computer-operator.exe patch.');
+      }
+      fs.closeSync(fd);
+    } catch (binErr) {
+      console.log('[Restore] Notice: operator binary revert skipped:', binErr.message);
+    }
+  }
+
   console.log('\n====================================================');
   console.log('       ✓ Cue Restored to Original Factory State!    ');
   console.log('====================================================\n');

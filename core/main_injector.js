@@ -114,17 +114,72 @@ function injectMainProcess(mainCjsPath) {
       console.warn("[LocalDevice] Computer Use helper resolution failed");
     }
 
-    // ====== Custom MCP Merger ======
+    // ====== Non-destructive System & Custom MCP Merger ======
+    const manifest = (0, import_node_path22.join)(configDirectory, "mcp_servers.json");
+    if ((0, import_node_fs12.existsSync)(manifest)) {
+      try {
+        const rawExisting = (0, import_node_fs12.readFileSync)(manifest, "utf8");
+        const existingData = JSON.parse(rawExisting);
+        if (Array.isArray(existingData)) {
+          for (const item of existingData) {
+            if (item && item.name && !entries.some(e => e.name === item.name)) {
+              entries.push(item);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("[LocalDevice] Could not read existing manifest:", err.message);
+      }
+    }
+
     try {
       const userMcpPath = (0, import_node_path22.join)((0, import_node_os6.homedir)(), ".cue", "mcp_servers.json");
       if ((0, import_node_fs12.existsSync)(userMcpPath)) {
         const rawMcp = (0, import_node_fs12.readFileSync)(userMcpPath, "utf8");
-        const customEntries = JSON.parse(rawMcp);
-        if (Array.isArray(customEntries)) {
-          for (const item of customEntries) {
-            if (item && item.name && item.transport) {
-              entries.push(item);
-              console.log("[LocalDevice] Merged custom user MCP server:", item.name);
+        let parsed = null;
+        try {
+          parsed = JSON.parse(rawMcp);
+        } catch (e) {
+          console.warn("[LocalDevice] User mcp_servers.json syntax error:", e.message);
+        }
+        if (parsed) {
+          const userList = [];
+          if (Array.isArray(parsed)) {
+            for (const it of parsed) {
+              if (!it || !it.name) continue;
+              if (it.transport && typeof it.transport === "object") {
+                userList.push(it);
+              } else if (it.command) {
+                userList.push({
+                  name: it.name,
+                  description: it.description || it.name,
+                  transport: { type: "stdio", command: it.command, args: it.args || [], env: it.env || {} }
+                });
+              }
+            }
+          } else if (typeof parsed === "object") {
+            const map = (parsed.mcpServers && typeof parsed.mcpServers === "object") ? parsed.mcpServers : parsed;
+            for (const [k, v] of Object.entries(map)) {
+              if (!v || typeof v !== "object") continue;
+              if (v.transport && typeof v.transport === "object") {
+                userList.push({ name: k, description: v.description || k, transport: v.transport });
+              } else if (v.command) {
+                userList.push({
+                  name: k,
+                  description: v.description || k,
+                  transport: { type: "stdio", command: v.command, args: v.args || [], env: v.env || {} }
+                });
+              }
+            }
+          }
+          for (const u of userList) {
+            const existingIdx = entries.findIndex(e => e.name === u.name);
+            if (existingIdx !== -1) {
+              entries[existingIdx] = u;
+              console.log("[LocalDevice] Replaced server with user config:", u.name);
+            } else {
+              entries.push(u);
+              console.log("[LocalDevice] Merged custom user MCP server:", u.name);
             }
           }
         }

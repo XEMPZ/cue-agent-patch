@@ -158,6 +158,25 @@ try {
   // Cleanup temp dir
   fs.rmSync(tmpDir, { recursive: true, force: true });
 
+  // 6.5. Optional Go operator MCP whitelist unlock
+  const operatorExe = path.join(path.dirname(asarPath), 'bin', 'manus-computer-operator.exe');
+  if (fs.existsSync(operatorExe)) {
+    try {
+      const fd = fs.openSync(operatorExe, 'r+');
+      const buf = Buffer.alloc(6);
+      fs.readSync(fd, buf, 0, 6, 0x7cc902);
+      if (buf.toString('hex') === '0f840f030000') {
+        fs.writeSync(fd, Buffer.from('909090909090', 'hex'), 0, 6, 0x7cc902);
+        console.log('[Binary Patch] Unlocked custom MCP whitelist in manus-computer-operator.exe!');
+      } else if (buf.toString('hex') === '909090909090') {
+        console.log('[Binary Patch] manus-computer-operator.exe custom MCP whitelist is already unlocked.');
+      }
+      fs.closeSync(fd);
+    } catch (binErr) {
+      console.log('[Binary Patch] Notice: operator binary patch skipped:', binErr.message);
+    }
+  }
+
   console.log('\n====================================================');
   console.log('       🎉 PATCH APPLIED SUCCESSFULLY!               ');
   console.log('   All execution steps, commands, and timelines     ');
